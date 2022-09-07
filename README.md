@@ -1,6 +1,66 @@
+
+# ติดตั้ง LNbits และทำ Clearnet บน VPS (LN Node Workshop)
+<img src="tunnels-shanghai.jpg" />
+ขั้นตอนต่างๆ ในการติดตั้งอ้างอิงจาก [TrezorHannes/vps-lnbits](https://github.com/TrezorHannes/vps-lnbits) แต่มีการปรับค่าพารามิเตอร์บางอย่างให้ถูกต้องและเหมาะสมกับการใช้งาน node ของเรา ผมจะขอจัดกลุ่มขั้นตอนการติดตั้งใหม่ดังนี้
+
+- [เตรียมความพร้อม](#เตรียมความพร้อม)
+  - [VPS: ติดตั้ง VPS บน Cloud](#vps-ติดตั้ง-vps-บน-cloud)
+  - [VPS: hardening VPS ให้เหมาะสม](#vps-hardening-vps-ให้เหมาะสม)
+- [ติดตั้งและ config OpenVPN บน VPS และ node](#ติดตั้งและ-config-openvpn-บน-vps-และ-node)
+  - [VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate](#vps-ติดตั้ง-openvpn-server-บน-vps-พร้อม-config--certificate)
+  - [Node: ติดตั้งและทดสอบ VPN Tunnel บน node](#node-ติดตั้งและทดสอบ-vpn-tunnel-บน-node)
+  - [VPS: ทำ port forward ใน docker ของ OpenVPN](#vps-ทำ-port-forward-ใน-docker-ของ-openvpn)
+- [แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits](#แก้ไขพารามิเตอร์บน-lnd-สำหรับรองรับ-hybrid-mode-และ-lnbits)
+  - [Node: แก้ไขพารามิเตอร์บน LND](#node-แก้ไขพารามิเตอร์บน-lnd)
+  - [Node: Restart LND](#node-restart-lnd)
+- [ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate](#ติดตั้ง-lnbits-บน-vps-พร้อมทั้ง-generate-certificate)
+  - [VPS: ติดตั้ง LNbits บน VPS](#vps-ติดตั้ง-lnbits-บน-vps)
+  - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
+
+## เตรียมความพร้อม
+
+### VPS: ติดตั้ง VPS บน Cloud
+
+
+### VPS: hardening VPS ให้เหมาะสม
+
+
+## ติดตั้งและ config OpenVPN บน VPS และ node
+
+
+### VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate
+
+
+### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
+
+
+### VPS: ทำ port forward ใน docker ของ OpenVPN
+
+
+## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
+
+
+### Node: แก้ไขพารามิเตอร์บน LND
+
+
+### Node: Restart LND
+
+
+## ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate
+
+
+### VPS: ติดตั้ง LNbits บน VPS
+
+
+### VPS: ทำ Domain, Webserver และ SSL Certificate
+
+
+
+
+
 # VPS-LNbits
 _Documentation to setup LNbits on a VPS, connected to your Lightning Network Node through a secured tunnel_
-<img src="tunnels-shanghai.jpg" />
+
 
 Here's my current setup shared with you, and your intend can be manyfold, you may
 - have a dynamic IP from your Internet Service Provider
