@@ -18,33 +18,105 @@
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
 
 ## เตรียมความพร้อม
+ในขั้นตอนแรก เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมเคยใช้คือ Lunanode หรือถ้าใครต้องการใช้ที่อื่นๆ เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
 
 ### VPS: ติดตั้ง VPS บน Cloud
-
+เมื่อสมัคร cloud เรียบร้อยให้ทำการสร้าง VPS ขึ้นมาใหม่ โดยเลือก OS เป็น Ubuntu และจำเป็นต้องใช้ Public IP ให้จด Public IP ที่ใช้บน VPS ไว้เพราะ IP นี้จำเป็นต้องสำหรับการเชื่อมต่อของ LND และ LNbits 
 
 ### VPS: hardening VPS ให้เหมาะสม
-
+ทำการอัพเกรด OS และ Config UFW
+~~~
+apt-get update
+apt-get upgrade
+apt-get install docker.io tmux
+systemctl start docker.service
+apt install ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow OpenSSH
+ufw allow 80 comment 'Standard Webserver'
+ufw allow 443 comment 'SSL Webserver'
+ufw allow 9735 comment 'LND Main Node 1'
+ufw enable
+sudo apt install fail2ban
+~~~
 
 ## ติดตั้งและ config OpenVPN บน VPS และ node
-
+ขั้นตอนนี้เป็นการสร้าง tunnel ระหว่าง VPS และ node ให้สามารถเชื่อมต่อกันได้แบบปลอดภัย
 
 ### VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate
+~~~
+export OVPN_DATA="ovpn-data"
+nano .bashrc
+# เพิ่มบันทัดล่างสุด export OVPN_DATA="ovpn-data"
 
+sudo docker volume create --name $OVPN_DATA
+sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://<PUBLIC IP>
+sudo docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki
+# Generate key for ca, use passphrase as usual
+
+sudo docker run -v $OVPN_DATA:/etc/openvpn -d -p 1194:1194/udp -p 9735:9735 -p 8080:8080 --cap-add=NET_ADMIN kylemanna/openvpn
+sudo docker ps
+# จดหมายเลข CONTAINER ID
+
+sudo docker exec -it <CONTAINER ID> sh
+ifconfig
+# internal ip (docker): 172.17.0.2
+
+exit
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full <NODE NAME> nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient <NODE NAME> > <NODE NAME>.ovpn
+~~~
 
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
+~~~
+cd ~
+mkdir VPNcert
+scp ubuntu@<PUBLIC IP>:/home/ubuntu/<NODE NAME>.ovpn /home/admin/VPNcert/
+chmod 600 /home/admin/VPNcert/<NODE NAME>.ovpn
+sudo apt-get install openvpn
+sudo cp -p /home/admin/VPNcert/<NODE NAME>.ovpn /etc/openvpn/CERT.conf
+sudo systemctl enable openvpn@CERT
+sudo systemctl start openvpn@CERT
+~~~
+หลังจาก node ของเรา connect ไปที่ VPS ด้วย OpenVPN สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
+~~~
+VPS IP  : 192.168.255.1
+Node IP : 192.168.255.6
+~~~
 
 
 ### VPS: ทำ port forward ใน docker ของ OpenVPN
+~~~
+docker ps
+sudo docker exec -it <CONTAINER ID> sh
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
+iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
 
+cd /etc/openvpn
+vi ovpn_env.sh
+# Add the following line to the file
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
+iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
+exit
+
+exit
+~~~
 
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
-
+เพื่อให้ LND เราสามารถใช้ Hybrid Mode และ LNbits จำเป็นต้องแก้ไขไฟล์ lnd.conf และ restart lnd
 
 ### Node: แก้ไขพารามิเตอร์บน LND
+~~~
 
+~~~
 
 ### Node: Restart LND
-
+~~~
+~~~
 
 ## ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate
 
