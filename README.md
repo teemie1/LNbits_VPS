@@ -65,18 +65,18 @@ ifconfig
 
 exit
 
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full <NODE NAME> nopass
-docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient <NODE NAME> > <NODE NAME>.ovpn
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full node1 nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient node1 > node1.ovpn
 ~~~
 
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
 ~~~
 cd ~
 mkdir VPNcert
-scp ubuntu@<PUBLIC IP>:/home/ubuntu/<NODE NAME>.ovpn /home/admin/VPNcert/
-chmod 600 /home/admin/VPNcert/<NODE NAME>.ovpn
+scp ubuntu@<PUBLIC IP>:/home/ubuntu/node1.ovpn /home/admin/VPNcert/
+chmod 600 /home/admin/VPNcert/node1.ovpn
 sudo apt-get install openvpn
-sudo cp -p /home/admin/VPNcert/<NODE NAME>.ovpn /etc/openvpn/CERT.conf
+sudo cp -p /home/admin/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
 sudo systemctl enable openvpn@CERT
 sudo systemctl start openvpn@CERT
 
@@ -102,7 +102,6 @@ vi ovpn_env.sh
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
 iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
-exit
 
 exit
 ~~~
@@ -128,10 +127,6 @@ tor.active=true
 tor.v3=true
 tor.streamisolation=false
 tor.skip-proxy-for-clearnet-targets=true
-
-
-sudo systemctl restart lnd.service
-
 ~~~
 
 ### Node: Restart LND
