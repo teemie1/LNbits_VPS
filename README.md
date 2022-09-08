@@ -204,23 +204,64 @@ sudo systemctl start lnbits.service
 
 ### VPS: ทำ Domain, Webserver และ SSL Certificate
 
-Domain
+#### Domain
 เราจำเป็นต้อง register domain ของเราเองขึ้นมา ซึ่งเราสามารถใช้ free domain จาก duckdns.org ได้ดังนี้
  - เข้าไปที่เว็บ https://duckdns.org
  - login ด้วย gmail หรือ github หรืออะไรก็แล้วแต่เราได้เลย
  - หลังจากนั้นให้สร้าง domain ของเราขึ้นมา โดยใส่ ip เป็น Public IP ของ VPS
  - จด token ในหน้า duckdns.org ของเราไว้และเก็บเป็นความลับ เพราะ token เปรียบเสมือน private key เพื่อแสดงความเป็นเจ้าของ domain
  
-SSL Certificate
+#### SSL Certificate
 ใช้คำสั่งเพื่อ generate SSL Certificate สำหรับใช้งานกับ LNbits บน domain ของเราเอง 
 ~~~
 sudo apt update
 sudo apt install nginx certbot
 sudo certbot certonly --manual --preferred-challenges dns
 ~~~
-หลังจากนั้น certbot จะถามหา domain เราให้ใส่ domain ที่เราสร้างในขั้นตอนก่อนหน้า แล้วมันจะให้เราแสดงความเป็นเจ้าของด้วยการใส่ค่า TXT ใน domain ของเรา ซึ่งทำได้ดังนี้
- - เปิด notepad ขึ้นมา และพิมพ์ค่า https://www.duckdns.org/update?domains={YOURVALUE}&token={YOURVALUE}&txt={YOURVALUE}[&verbose=true] โดยแทนที่ค่าต่าง ๆ ดังนี้
+หลังจากนั้น certbot จะถามหา domain เราให้ใส่ domain ที่เราสร้างในขั้นตอนก่อนหน้า แล้วมันจะให้เราแสดงความเป็นเจ้าของด้วยการกำหนดค่า TXT Record ใน domain ของเรา ซึ่งทำได้ดังนี้
+ - เปิด notepad ขึ้นมา และพิมพ์ค่า `https://www.duckdns.org/update?domains={YOURVALUE}&token={YOURVALUE}&txt={YOURVALUE}&verbose=true` โดยแทนที่ค่าต่าง ๆ ดังนี้
+     - `domains={YOURVALUE}` ใส่ค่า subdomain ไม่ต้องใส่ duckdns.org เช่น `domains=teemie`
+     - `token={YOURVALUE}` ใส่ค่า token ในหน้า duckdns.org 
+     - `txt={YOURVALUE}` ใส่ค่าที่ได้จาก cerbot
+ - ตัวอย่าง `https://www.duckdns.org/update?domains=teemie&token=a123x4bc-e221-2352-wx15-57832e1h423g&txt=_acme-challenge.teemie.duckdns.org&verbose=true` ให้ copy URL ทั้งหมดไปใส่ใน Browser และผลที่ได้จะลงท้ายด้วย OK
+ - เปิดหน้าจอ command อีกจอ ติดตั้ง dig `sudo apt-get install dnsutils` เพื่อใช้สำหรับตรวจสอบโดยใช้คำสั่ง `dig -t txt _acme-challenge.teemie.duckdns.org` เปรียบเทียบ TXT Record ที่ได้กับ certbot ถ้าทุกอย่างตรงกัน กลับไปที่หน้าจอ certbot กด enter
+ - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem` และ `etc/letsencrypt/live/teemie.duckdns.org/privkey.pem`
 
+#### Webserver NGINX
+~~~
+sudo nano /etc/nginx/sites-available/lnbits.conf
 
-Webserver NGINX
+# ใส่ตามนี้
 
+server {
+# Binds the TCP port 80
+listen 80;
+# Defines the domain or subdomain name
+server_name <DOMAIN>.duckdns.org;
+# Redirect the traffic to the corresponding
+# HTTPS server block with status code 301
+return 301 https://$host$request_uri;
+}
+server {
+listen 443 ssl; # tell nginx to listen on port 443 for SSL connections
+server_name <DOMAIN>.duckdns.org; # tell nginx the expected domain for requests
+access_log /var/log/nginx/lnbits-access.log; # Your first go-to for troubleshooting
+error_log /var/log/nginx/lnbits-error.log; # Same as above
+location / {
+proxy_pass http://127.0.0.1:5000; # This is your uvicorn LNbits local host IP and port
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection 'upgrade';
+proxy_set_header X-Forwarded-Proto https;
+proxy_set_header Host $host;
+proxy_http_version 1.1; # headers to ensure replies are coming back and forth through your domain
+}
+ssl_certificate /etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem; # Point to the fullchain.pem from Certbot
+ssl_certificate_key /etc/letsencrypt/live/teemie.duckdns.org/privkey.pem; # Point to the private key from Certbot
+}
+
+sudo nginx -t
+sudo ln -s /etc/nginx/sites-available/lnbits.conf /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
+~~~
+
+เสร็จสิ้นทุกขึ้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
