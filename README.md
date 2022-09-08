@@ -224,7 +224,7 @@ sudo certbot certonly --manual --preferred-challenges dns
      - `token={YOURVALUE}` ใส่ค่า token ในหน้า duckdns.org 
      - `txt={YOURVALUE}` ใส่ค่าที่ได้จาก cerbot
  - ตัวอย่าง `https://www.duckdns.org/update?domains=teemie&token=a123x4bc-e221-2352-wx15-57832e1h423g&txt=_acme-challenge.teemie.duckdns.org&verbose=true` ให้ copy URL ทั้งหมดไปใส่ใน Browser และผลที่ได้จะลงท้ายด้วย OK
- - เปิดหน้าจอ command อีกจอ ติดตั้ง dig `sudo apt-get install dnsutils` เพื่อใช้สำหรับตรวจสอบโดยใช้คำสั่ง `dig -t txt _acme-challenge.teemie.duckdns.org` เปรียบเทียบ TXT Record ที่ได้กับ certbot ถ้าทุกอย่างตรงกัน กลับไปที่หน้าจอ certbot กด enter
+ - เปิดหน้าจอ terminal อีกจอ ติดตั้ง dig `sudo apt-get install dnsutils` เพื่อใช้สำหรับตรวจสอบโดยใช้คำสั่ง `dig -t txt _acme-challenge.teemie.duckdns.org` เปรียบเทียบ TXT Record ที่ได้กับ certbot ถ้าทุกอย่างตรงกัน กลับไปที่หน้าจอ certbot กด enter
  - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `/etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem` และ `/etc/letsencrypt/live/teemie.duckdns.org/privkey.pem`
 
 #### Webserver NGINX
