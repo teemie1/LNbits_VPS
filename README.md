@@ -14,6 +14,7 @@
   - [Node: แก้ไขพารามิเตอร์บน LND](#node-แก้ไขพารามิเตอร์บน-lnd)
   - [Node: Restart LND](#node-restart-lnd)
 - [ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate](#ติดตั้ง-lnbits-บน-vps-พร้อมทั้ง-generate-certificate)
+  - [Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND](#node-การคัดลอกสิทธิ์-lnbits-เพื่อใช้เชื่อมต่อกับ-lnd)
   - [VPS: ติดตั้ง LNbits บน VPS](#vps-ติดตั้ง-lnbits-บน-vps)
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
 
@@ -39,6 +40,7 @@ ufw allow 443 comment 'SSL Webserver'
 ufw allow 9735 comment 'LND Main Node 1'
 ufw enable
 sudo apt install fail2ban
+sudo timedatectl set-timezone Asia/Bangkok
 ~~~
 
 ## ติดตั้งและ config OpenVPN บน VPS และ node
@@ -135,10 +137,90 @@ sudo systemctl restart lnd.service
 ~~~
 
 ## ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate
+ขั้นตอนนี้เป็นส่วนของการติดตั้ง LNbits บน VPS เพื่อให้สามารถใช้งานได้จากภายนอกบ้าน (node เรารันในบ้าน) ทำให้สามารถใช้จ่าย bitcoin นอกสถานที่แต่ยังคงจ่ายผ่าน node ของเราเองที่รันอยู่ภายในบ้านได้
 
+### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
+~~~
+scp /data/lnd/tls.cert ubuntu@[PUBLIC IP]:/home/ubuntu
+scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon ubuntu@[PUBLIC IP]:/home/ubuntu
+~~~
 
 ### VPS: ติดตั้ง LNbits บน VPS
+~~~
+sudo apt-get install git
+git clone https://github.com/lnbits/lnbits-legend
+sudo apt update
+sudo apt install python3-venv
+cd lnbits-legend
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
+mkdir ~/lnbits-legend/data
+cp .env.example .env
+sudo nano .env
+# Fill the following lines to the file
+LNBITS_DATA_FOLDER="/home/ubuntu/lnbits-legend/data"
+LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
+LND_REST_ENDPOINT="https://172.17.0.1:8080"
+LND_REST_CERT="/home/ubuntu/tls.cert"
+LND_REST_MACAROON="/home/ubuntu/admin.macaroon"
+
+./venv/bin/python build.py
+tmux new -s lnbits
+cd ~/lnbits-legend
+./venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
+~~~
+
+หลังจากติดตั้งเสร็จแล้ว เราจำเป็นต้องทำ lnbits services เพื่อให้ start ทุกครั้งที่ reboot เครื่อง
+
+~~~
+sudo nano /etc/systemd/system/lnbits.service
+# ใส่รายละเอียดดังนี้
+
+# Systemd unit for lnbits
+# /etc/systemd/system/lnbits.service
+
+[Unit]
+Description=LNbits
+
+[Service]
+WorkingDirectory=/home/ubuntu/lnbits-legend
+ExecStart=/home/ubuntu/lnbits-legend/venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
+User=ubuntu
+Restart=always
+TimeoutSec=120
+RestartSec=30
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+~~~
+
+หลังจากได้ไฟล์ lnbits.service แล้ว เราต้อง enable และ start ขึ้นมาดังนี้
+~~~
+sudo systemctl enable lnbits.service
+sudo systemctl start lnbits.service
+~~~
 
 
 ### VPS: ทำ Domain, Webserver และ SSL Certificate
+
+Domain
+เราจำเป็นต้อง register domain ของเราเองขึ้นมา ซึ่งเราสามารถใช้ free domain จาก duckdns.org ได้ดังนี้
+ - เข้าไปที่เว็บ https://duckdns.org
+ - login ด้วย gmail หรือ github หรืออะไรก็แล้วแต่เราได้เลย
+ - หลังจากนั้นให้สร้าง domain ของเราขึ้นมา โดยใส่ ip เป็น Public IP ของ VPS
+ - จด token ในหน้า duckdns.org ของเราไว้และเก็บเป็นความลับ เพราะ token เปรียบเสมือน private key เพื่อแสดงความเป็นเจ้าของ domain
+ 
+SSL Certificate
+ใช้คำสั่งเพื่อ generate SSL Certificate สำหรับใช้งานกับ LNbits บน domain ของเราเอง 
+~~~
+sudo apt update
+sudo apt install nginx certbot
+sudo certbot certonly --manual --preferred-challenges dns
+~~~
+หลังจากนั้น certbot จะถามหา domain เราให้ใส่ domain ที่เราสร้างในขั้นตอนก่อนหน้า แล้วมันจะให้เราแสดงความเป็นเจ้าของด้วยการใส่ค่า TXT ใน domain ของเรา ซึ่งทำได้ดังนี้
+ - เปิด notepad ขึ้นมา และพิมพ์ค่า https://www.duckdns.org/update?domains={YOURVALUE}&token={YOURVALUE}&txt={YOURVALUE}[&verbose=true] โดยแทนที่ค่าต่าง ๆ ดังนี้
+
+
+Webserver NGINX
 
