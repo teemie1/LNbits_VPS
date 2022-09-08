@@ -167,11 +167,10 @@ LND_REST_ENDPOINT="https://172.17.0.1:8080"
 LND_REST_CERT="/home/ubuntu/tls.cert"
 LND_REST_MACAROON="/home/ubuntu/admin.macaroon"
 ~~~
-แก้ไขไฟล์เสร็จแล้วก็เริ่มทดสอบ start 
+ทำการ build static file และเริ่มทดสอบ start 
 ~~~
 ./venv/bin/python build.py
 tmux new -s lnbits
-cd ~/lnbits-legend
 ./venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
 ~~~
 
