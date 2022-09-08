@@ -158,13 +158,17 @@ python3 -m venv venv
 mkdir ~/lnbits-legend/data
 cp .env.example .env
 sudo nano .env
-# Fill the following lines to the file
+~~~
+แก้ไขไฟล์ .env ดังนี้
+~~~
 LNBITS_DATA_FOLDER="/home/ubuntu/lnbits-legend/data"
 LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
 LND_REST_ENDPOINT="https://172.17.0.1:8080"
 LND_REST_CERT="/home/ubuntu/tls.cert"
 LND_REST_MACAROON="/home/ubuntu/admin.macaroon"
-
+~~~
+แก้ไขไฟล์เสร็จแล้วก็เริ่มทดสอบ start 
+~~~
 ./venv/bin/python build.py
 tmux new -s lnbits
 cd ~/lnbits-legend
@@ -175,8 +179,9 @@ cd ~/lnbits-legend
 
 ~~~
 sudo nano /etc/systemd/system/lnbits.service
-# ใส่รายละเอียดดังนี้
-
+~~~
+ใส่รายละเอียดดังนี้
+~~~
 # Systemd unit for lnbits
 # /etc/systemd/system/lnbits.service
 
@@ -229,11 +234,12 @@ sudo certbot certonly --manual --preferred-challenges dns
  - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `/etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem` และ `/etc/letsencrypt/live/teemie.duckdns.org/privkey.pem`
 
 #### Webserver NGINX
+สร้างไฟล์ config สำหรับ LNbits ใน nginx
 ~~~
 sudo nano /etc/nginx/sites-available/lnbits.conf
-
-# ใส่ตามนี้
-
+~~~
+ใส่ตามนี้
+~~~
 server {
 # Binds the TCP port 80
 listen 80;
@@ -259,7 +265,9 @@ proxy_http_version 1.1; # headers to ensure replies are coming back and forth th
 ssl_certificate /etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem; # Point to the fullchain.pem from Certbot
 ssl_certificate_key /etc/letsencrypt/live/teemie.duckdns.org/privkey.pem; # Point to the private key from Certbot
 }
-
+~~~
+ใช้คำสั่งเพื่อตรวจสอบความถูกต้องและเริ่ม start ใช้งานได้เลย
+~~~
 sudo nginx -t
 sudo ln -s /etc/nginx/sites-available/lnbits.conf /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
