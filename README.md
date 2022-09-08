@@ -47,8 +47,7 @@ sudo apt install fail2ban
 ### VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate
 ~~~
 export OVPN_DATA="ovpn-data"
-nano .bashrc
-# เพิ่มบันทัดล่างสุด export OVPN_DATA="ovpn-data"
+echo 'export OVPN_DATA="ovpn-data"' >> ~/.bashrc
 
 sudo docker volume create --name $OVPN_DATA
 sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://<PUBLIC IP>
