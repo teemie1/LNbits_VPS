@@ -61,11 +61,8 @@ sudo docker run -v $OVPN_DATA:/etc/openvpn -d -p 1194:1194/udp -p 9735:9735 -p 8
 sudo docker ps
 # จดหมายเลข CONTAINER ID
 
-sudo docker exec -it <CONTAINER ID> sh
-ifconfig
+sudo docker exec -it <CONTAINER ID> ifconfig
 # internal ip (docker): 172.17.0.2
-
-exit
 
 docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full node1 nopass
 docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient node1 > node1.ovpn
