@@ -1,6 +1,7 @@
 
 # ติดตั้ง LNbits และทำ Clearnet บน VPS (LN Node Workshop)
 <img src="tunnels-shanghai.jpg" />
+
 ขั้นตอนต่างๆ ในการติดตั้งอ้างอิงจาก [TrezorHannes/vps-lnbits](https://github.com/TrezorHannes/vps-lnbits) แต่มีการปรับค่าพารามิเตอร์บางอย่างให้ถูกต้องและเหมาะสมกับการใช้งาน node ของเรา ผมจะขอจัดกลุ่มขั้นตอนการติดตั้งใหม่ดังนี้
 
 - [เตรียมความพร้อม](#เตรียมความพร้อม)
@@ -19,7 +20,7 @@
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
 
 ## เตรียมความพร้อม
-ในขั้นตอนแรก เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมเคยใช้คือ Lunanode หรือถ้าใครต้องการใช้ที่อื่นๆ เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
+ในขั้นตอนแรก เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Lunanode หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
 
 ### VPS: ติดตั้ง VPS บน Cloud
 เมื่อสมัคร cloud เรียบร้อยให้ทำการสร้าง VPS ขึ้นมาใหม่ โดยเลือก OS เป็น Ubuntu และจำเป็นต้องใช้ Public IP ให้จด Public IP ที่ใช้บน VPS ไว้เพราะ IP นี้จำเป็นต้องสำหรับการเชื่อมต่อของ LND และ LNbits 
@@ -156,16 +157,19 @@ python3 -m venv venv
 mkdir ~/lnbits-legend/data
 cp .env.example .env
 sudo nano .env
-# Fill the following lines to the file
+~~~
+แก้ไขไฟล์ .env ดังนี้
+~~~
 LNBITS_DATA_FOLDER="/home/ubuntu/lnbits-legend/data"
 LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
 LND_REST_ENDPOINT="https://172.17.0.1:8080"
 LND_REST_CERT="/home/ubuntu/tls.cert"
 LND_REST_MACAROON="/home/ubuntu/admin.macaroon"
-
+~~~
+ทำการ build static file และเริ่มทดสอบ start 
+~~~
 ./venv/bin/python build.py
 tmux new -s lnbits
-cd ~/lnbits-legend
 ./venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
 ~~~
 
@@ -173,8 +177,9 @@ cd ~/lnbits-legend
 
 ~~~
 sudo nano /etc/systemd/system/lnbits.service
-# ใส่รายละเอียดดังนี้
-
+~~~
+ใส่รายละเอียดดังนี้
+~~~
 # Systemd unit for lnbits
 # /etc/systemd/system/lnbits.service
 
@@ -227,11 +232,12 @@ sudo certbot certonly --manual --preferred-challenges dns
  - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `/etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem` และ `/etc/letsencrypt/live/teemie.duckdns.org/privkey.pem`
 
 #### Webserver NGINX
+สร้างไฟล์ config สำหรับ LNbits ใน nginx
 ~~~
 sudo nano /etc/nginx/sites-available/lnbits.conf
-
-# ใส่ตามนี้
-
+~~~
+ใส่ตามนี้
+~~~
 server {
 # Binds the TCP port 80
 listen 80;
@@ -257,10 +263,12 @@ proxy_http_version 1.1; # headers to ensure replies are coming back and forth th
 ssl_certificate /etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem; # Point to the fullchain.pem from Certbot
 ssl_certificate_key /etc/letsencrypt/live/teemie.duckdns.org/privkey.pem; # Point to the private key from Certbot
 }
-
+~~~
+ใช้คำสั่งเพื่อตรวจสอบความถูกต้องและเริ่ม start ใช้งานได้เลย
+~~~
 sudo nginx -t
 sudo ln -s /etc/nginx/sites-available/lnbits.conf /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
 ~~~
 
-เสร็จสิ้นทุกขั้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
+เสร็จสิ้นทุกขั้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ด้วย `https://teemie.duckdns.org` ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
