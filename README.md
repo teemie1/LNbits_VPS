@@ -39,6 +39,7 @@ ufw allow OpenSSH
 ufw allow 80 comment 'Standard Webserver'
 ufw allow 443 comment 'SSL Webserver'
 ufw allow 9735 comment 'LND Main Node 1'
+ufw allow 1194 comment 'OpenVPN'
 ufw enable
 sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
