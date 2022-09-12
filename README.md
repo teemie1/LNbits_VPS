@@ -39,6 +39,7 @@ ufw allow OpenSSH
 ufw allow 80 comment 'Standard Webserver'
 ufw allow 443 comment 'SSL Webserver'
 ufw allow 9735 comment 'LND Main Node 1'
+ufw allow 1194 comment 'OpenVPN'
 ufw enable
 sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
@@ -115,6 +116,7 @@ sudo ufw allow 8080 comment 'allow RestLNDWallet from outside'
 sudo nano /mnt/hdd/lnd/lnd.conf
 # แก้ไขพารามิเตอร์
 [Application Options]
+allow-circular-route=1
 externalip=<PUBLIC IP>:9735
 listen=0.0.0.0:9735
 restlisten=0.0.0.0:8080
