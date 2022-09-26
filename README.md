@@ -63,14 +63,14 @@ sudo docker run -v $OVPN_DATA:/etc/openvpn -d -p 1194:1194/udp -p 9735:9735 -p 8
 sudo docker ps
 # จดหมายเลข CONTAINER ID
 
-sudo docker exec -it <CONTAINER ID> sh
+sudo docker exec -it $(sudo docker ps -q) sh
 ifconfig
 # internal ip (docker): 172.17.0.2
 
 exit
 
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full node1 nopass
-docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient node1 > node1.ovpn
+sudo docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full node1 nopass
+sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient node1 > node1.ovpn
 ~~~
 
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
@@ -94,8 +94,9 @@ Node IP : 192.168.255.6
 
 ### VPS: ทำ port forward ใน docker ของ OpenVPN
 ~~~
-docker ps
-sudo docker exec -it <CONTAINER ID> sh
+sudo docker ps
+sudo docker update --restart unless-stopped $(sudo docker ps -q)
+sudo docker exec -it $(sudo docker ps -q) sh
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
 iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
