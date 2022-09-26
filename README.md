@@ -28,19 +28,19 @@
 ### VPS: hardening VPS ให้เหมาะสม
 ทำการอัพเกรด OS และ Config UFW
 ~~~
-apt-get update
-apt-get upgrade
-apt-get install docker.io tmux
-systemctl start docker.service
-apt install ufw
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow OpenSSH
-ufw allow 80 comment 'Standard Webserver'
-ufw allow 443 comment 'SSL Webserver'
-ufw allow 9735 comment 'LND Main Node 1'
-ufw allow 1194 comment 'OpenVPN'
-ufw enable
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install docker.io tmux
+sudo systemctl start docker.service
+sudo apt install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow OpenSSH
+sudo ufw allow 80 comment 'Standard Webserver'
+sudo ufw allow 443 comment 'SSL Webserver'
+sudo ufw allow 9735 comment 'LND Main Node 1'
+sudo ufw allow 1194 comment 'OpenVPN'
+sudo ufw enable
 sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
 ~~~
