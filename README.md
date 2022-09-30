@@ -74,17 +74,20 @@ sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient
 ~~~
 
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
+คัดลอกไฟล์ node1.ovpn ซึ่งเป็น client openvpn config ใช้สำหรับการเชื่อมต่อระหว่าง VPN Client และ VPN Server เพื่อสร้าง tunnel เชื่อมต่อถึงกัน
 ~~~
 cd ~
 mkdir VPNcert
-scp ubuntu@<PUBLIC IP>:/home/ubuntu/node1.ovpn /home/admin/VPNcert/
-chmod 600 /home/admin/VPNcert/node1.ovpn
+scp <VPS User>@<PUBLIC IP>:node1.ovpn ~/VPNcert
+chmod 600 ~/VPNcert/node1.ovpn
 sudo apt-get install openvpn
 sudo cp -p /home/admin/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
 sudo systemctl enable openvpn@CERT
 sudo systemctl start openvpn@CERT
 
 ~~~
+* VPS User สำหรับ Lunanode คือ ubuntu ส่วน Digital Ocean คือ root
+
 หลังจาก node ของเรา connect ไปที่ VPS ด้วย OpenVPN สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
 ~~~
 VPS IP  : 192.168.255.1
