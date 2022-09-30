@@ -81,7 +81,7 @@ mkdir VPNcert
 scp <VPS User>@<PUBLIC IP>:node1.ovpn ~/VPNcert
 chmod 600 ~/VPNcert/node1.ovpn
 sudo apt-get install openvpn
-sudo cp -p /home/admin/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
+sudo cp -p ~/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
 sudo systemctl enable openvpn@CERT
 sudo systemctl start openvpn@CERT
 
