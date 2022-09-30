@@ -157,7 +157,7 @@ scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>:~
 ~~~
 curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
 ~~~
-
+* บางครั้ง cert ที่นำมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้
 
 ~~~
 sudo apt-get install git
