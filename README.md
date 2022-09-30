@@ -148,8 +148,8 @@ sudo systemctl restart lnd.service
 
 ### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
 ~~~
-scp /data/lnd/tls.cert ubuntu@[PUBLIC IP]:/home/ubuntu
-scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon ubuntu@[PUBLIC IP]:/home/ubuntu
+scp /data/lnd/tls.cert <VPS_USER>@<PUBLIC_IP>:/home/ubuntu
+scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>
 ~~~
 
 ### VPS: ติดตั้ง LNbits บน VPS
