@@ -153,6 +153,12 @@ scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>:~
 ~~~
 
 ### VPS: ติดตั้ง LNbits บน VPS
+ก่อนเริ่มติดตั้ง เราสามารถเช็ค cert ที่คัดลอกมาจาก node โดยใชคำสั่ง ซึ่งถ้าไม่ถูกต้องอาจลองตรวจสอบไฟล์ที่คัดลอกมาอีกครั้ง
+~~~
+curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
+~~~
+
+
 ~~~
 sudo apt-get install git
 git clone https://github.com/lnbits/lnbits-legend
