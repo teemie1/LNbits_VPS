@@ -14,7 +14,7 @@
 - [แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits](#แก้ไขพารามิเตอร์บน-lnd-สำหรับรองรับ-hybrid-mode-และ-lnbits)
   - [Node: แก้ไขพารามิเตอร์บน LND](#node-แก้ไขพารามิเตอร์บน-lnd)
   - [Node: Restart LND](#node-restart-lnd)
-- [ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate](#ติดตั้ง-lnbits-บน-vps-พร้อมทั้ง-generate-certificate)
+- [ติดตั้ง LNbits บน VPS](#ติดตั้ง-lnbits-บน-vps)
   - [Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND](#node-การคัดลอกสิทธิ์-lnbits-เพื่อใช้เชื่อมต่อกับ-lnd)
   - [VPS: ติดตั้ง LNbits บน VPS](#vps-ติดตั้ง-lnbits-บน-vps)
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
@@ -143,7 +143,7 @@ tor.skip-proxy-for-clearnet-targets=true
 sudo systemctl restart lnd.service
 ~~~
 
-## ติดตั้ง LNbits บน VPS พร้อมทั้ง generate certificate
+## ติดตั้ง LNbits บน VPS
 ขั้นตอนนี้เป็นส่วนของการติดตั้ง LNbits บน VPS เพื่อให้สามารถใช้งานได้จากภายนอกบ้าน (node เรารันในบ้าน) ทำให้สามารถใช้จ่าย bitcoin นอกสถานที่แต่ยังคงจ่ายผ่าน node ของเราเองที่รันอยู่ภายในบ้านได้
 
 ### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
