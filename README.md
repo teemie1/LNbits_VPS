@@ -120,17 +120,20 @@ exit
 เพื่อให้ LND เราสามารถใช้ Hybrid Mode และ LNbits จำเป็นต้องแก้ไขไฟล์ lnd.conf และ restart lnd
 
 ### Node: แก้ไขพารามิเตอร์บน LND
+เปิดพอร์ตบน firewall
 ~~~
 sudo ufw allow 9735 comment 'allow LND from outside'
 sudo ufw allow 8080 comment 'allow RestLNDWallet from outside'
 sudo nano /mnt/hdd/lnd/lnd.conf
-# แก้ไขพารามิเตอร์
+~~~
+แก้ไขพารามิเตอร์ใน lnd.conf (ให้เพิ่ม tlsextraip เข้าไปใน lnd.conf ไม่ลบของเดิมที่มีอยู่)
+~~~
 [Application Options]
 allow-circular-route=1
 externalip=<PUBLIC IP>:9735
 listen=0.0.0.0:9735
 restlisten=0.0.0.0:8080
-tlsextraip=192.168.255.1
+tlsextraip=172.17.0.1
 nat=false
 
 [tor]
@@ -139,10 +142,20 @@ tor.v3=true
 tor.streamisolation=false
 tor.skip-proxy-for-clearnet-targets=true
 ~~~
+การเพิ่ม tlsextraip ใน lnd.conf เพื่อเพิ่ม IP เข้าใน cert file เราจึงจำเป็นต้องลบ cert และ key เดิมเสียก่อน แล้วไฟล์ทั้งสองจะถูกสร้างใหม่หลังจาก restart lnd
+~~~
+mv tls.cert tls.cert.old
+mv tls.key tls.key.old
+~~~
 
 ### Node: Restart LND
+* Raspibolt
 ~~~
 sudo systemctl restart lnd.service
+~~~
+* Citadel
+~~~
+sudo docker restart lightning
 ~~~
 
 ## ติดตั้ง LNbits บน VPS
@@ -160,10 +173,10 @@ scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
 ~~~
 curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
 ~~~
-ถ้า cert ที่คัดลอกมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้ เช่น node ของเราชื่อ yoga500.local เราจำเป็นต้องเพิ่มในไฟล์ /etc/hosts ดังนี้
+ถ้า cert ที่คัดลอกมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้ เช่น node ของเราชื่อ <NODE_HOSTNAME> เราจำเป็นต้องเพิ่มในไฟล์ /etc/hosts ดังนี้
   
 ~~~
-172.17.0.1    yoga500.local
+172.17.0.1    <NODE_HOSTNAME>
 ~~~
 ถ้าตรวจสอบ cert ผ่านเรียบร้อย เราสามารถเริ่มติดตั้ง LNbits ได้ดังนี้
 
