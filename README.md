@@ -82,7 +82,7 @@ sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient
 ~~~
 cd ~
 mkdir VPNcert
-scp <VPS User>@<PUBLIC IP>:node1.ovpn ~/VPNcert
+scp <VPS_User>@<PUBLIC_IP>:node1.ovpn ~/VPNcert
 chmod 600 ~/VPNcert/node1.ovpn
 sudo apt-get install openvpn
 sudo cp -p ~/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
@@ -90,7 +90,7 @@ sudo systemctl enable openvpn@CERT
 sudo systemctl start openvpn@CERT
 
 ~~~
-* VPS User สำหรับ Lunanode คือ ubuntu ส่วน Digital Ocean คือ root
+* <VPS_User> สำหรับ Lunanode คือ ubuntu ส่วน Digital Ocean คือ root
 
 หลังจาก node ของเรา connect ไปที่ VPS ด้วย OpenVPN สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
 ~~~
@@ -124,13 +124,23 @@ exit
 ~~~
 sudo ufw allow 9735 comment 'allow LND from outside'
 sudo ufw allow 8080 comment 'allow RestLNDWallet from outside'
-sudo nano /mnt/hdd/lnd/lnd.conf
+~~~
+เปิดไฟล์ lnd.con เพื่อแก้ไข
+* Raspibolt
+~~~
+cd /data/lnd
+sudo nano lnd.conf
+~~~
+* Citadel
+~~~
+cd ~/citadel/lnd
+sudo nano lnd.conf
 ~~~
 แก้ไขพารามิเตอร์ใน lnd.conf (ให้เพิ่ม tlsextraip เข้าไปใน lnd.conf ไม่ลบของเดิมที่มีอยู่)
 ~~~
 [Application Options]
 allow-circular-route=1
-externalip=<PUBLIC IP>:9735
+externalip=<PUBLIC_IP>:9735
 listen=0.0.0.0:9735
 restlisten=0.0.0.0:8080
 tlsextraip=172.17.0.1
@@ -165,12 +175,17 @@ sudo docker restart lightning
 
 ### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
 คัดลอก tls.cert และ macaroon จาก LN Node ของเราไปเก็บไว้บน VPS ซึ่งจำเป็นต้องแก้ <USER> และ <PUBLIC_IP> ตามระบบที่เราใช้
+* Raspibolt
 ~~~
-cd <PATH_TO_LND>
-scp tls.cert <USER>@<PUBLIC_IP>:~
-scp ./data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
+scp /data/lnd/tls.cert <VPS_USER>@<PUBLIC_IP>:~
+scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>:~
 ~~~
-
+* Citadel
+~~~
+scp ~/citadel/lnd/tls.cert <VPS_USER>@<PUBLIC_IP>:~
+scp ~/citadel/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>:~
+~~~
+  
 ### VPS: ติดตั้ง LNbits บน VPS
 ก่อนเริ่มติดตั้ง เราสามารถเช็ค cert ที่คัดลอกมาจาก node โดยใชคำสั่ง ซึ่งถ้าไม่ถูกต้องอาจลองตรวจสอบไฟล์ที่คัดลอกมาอีกครั้ง
 ~~~
