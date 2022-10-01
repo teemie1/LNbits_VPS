@@ -20,7 +20,7 @@
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
 
 ## เตรียมความพร้อม
-ในขั้นตอนแรก เราต้องเตรียมความพร้อมเครื่อง Nodebook/Desktop ให้พร้อม โดยจำเป็นต้อง Download putty,pscp และ puttygen จาก https://www.putty.org จากนั้นให้ generate key จาก puttygen และ generate key จากบน node ด้วยคำสั่ง ssh-keygen -t ed25519 
+ในขั้นตอนแรก เราต้องเตรียมความพร้อมเครื่อง Laptop/Desktop ให้พร้อม โดยจำเป็นต้องดาวน์โหลด putty, pscp และ puttygen ที่ https://www.putty.org จากนั้นให้สร้าง key จาก puttygen สำหรับ Laptop และสร้าง key สำหรับ node ด้วยคำสั่ง ssh-keygen -t ed25519 
 
 หลังจากนั้น เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Lunanode หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
 
