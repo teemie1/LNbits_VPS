@@ -149,6 +149,7 @@ mv tls.key tls.key.old
 ~~~
 
 ### Node: Restart LND
+ทำการ restart lnd ด้วยคำสั่งดังนี้
 * Raspibolt
 ~~~
 sudo systemctl restart lnd.service
@@ -157,6 +158,7 @@ sudo systemctl restart lnd.service
 ~~~
 sudo docker restart lightning
 ~~~
+หลังจาก restart lnd เรียบร้อยแล้ว URI จะปรากฎ 2 ค่า (หนึ่งในนั้นเป็น IP Address) และ cert file (tls.cert & tls.key) จะถูกสร้างขึ้นใหม่เพื่อรองรับการเชื่อมต่อจาก VPS
 
 ## ติดตั้ง LNbits บน VPS
 ขั้นตอนนี้เป็นส่วนของการติดตั้ง LNbits บน VPS เพื่อให้สามารถใช้งานได้จากภายนอกบ้าน (node เรารันในบ้าน) ทำให้สามารถใช้จ่าย bitcoin นอกสถานที่แต่ยังคงจ่ายผ่าน node ของเราเองที่รันอยู่ภายในบ้านได้
@@ -164,8 +166,9 @@ sudo docker restart lightning
 ### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
 คัดลอก tls.cert และ macaroon จาก LN Node ของเราไปเก็บไว้บน VPS ซึ่งจำเป็นต้องแก้ <USER> และ <PUBLIC_IP> ตามระบบที่เราใช้
 ~~~
-scp /data/lnd/tls.cert <USER>@<PUBLIC_IP>:~
-scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
+cd <PATH_TO_LND>
+scp tls.cert <USER>@<PUBLIC_IP>:~
+scp ./data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
 ~~~
 
 ### VPS: ติดตั้ง LNbits บน VPS
