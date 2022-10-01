@@ -158,7 +158,11 @@ scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
 ~~~
 curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
 ~~~
-* ถ้า cert ที่คัดลอกมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้
+ถ้า cert ที่คัดลอกมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้ เช่น node ของเราชื่อ yoga500.local เราจำเป็นต้องเพิ่มในไฟล์ /etc/hosts ดังนี้
+  
+~~~
+172.17.0.1    yoga500.local
+~~~
 
 ~~~
 sudo apt-get install git
@@ -274,8 +278,8 @@ proxy_set_header X-Forwarded-Proto https;
 proxy_set_header Host $host;
 proxy_http_version 1.1; # headers to ensure replies are coming back and forth through your domain
 }
-ssl_certificate /etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem; # Point to the fullchain.pem from Certbot
-ssl_certificate_key /etc/letsencrypt/live/teemie.duckdns.org/privkey.pem; # Point to the private key from Certbot
+ssl_certificate /etc/letsencrypt/live/<DOMAIN>.duckdns.org/fullchain.pem; # Point to the fullchain.pem from Certbot
+ssl_certificate_key /etc/letsencrypt/live/<DOMAIN>.duckdns.org/privkey.pem; # Point to the private key from Certbot
 }
 ~~~
 ใช้คำสั่งเพื่อตรวจสอบความถูกต้องและเริ่ม start ใช้งานได้เลย
@@ -285,4 +289,4 @@ sudo ln -s /etc/nginx/sites-available/lnbits.conf /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
 ~~~
 
-เสร็จสิ้นทุกขั้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ด้วย `https://teemie.duckdns.org` ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
+เสร็จสิ้นทุกขั้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ด้วย `https://<DOMAIN>.duckdns.org` ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
