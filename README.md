@@ -173,11 +173,11 @@ sudo nano .env
 ~~~
 แก้ไขไฟล์ .env ดังนี้
 ~~~
-LNBITS_DATA_FOLDER="/home/ubuntu/lnbits-legend/data"
+LNBITS_DATA_FOLDER="<USER_HOME>/lnbits-legend/data"
 LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
 LND_REST_ENDPOINT="https://172.17.0.1:8080"
-LND_REST_CERT="/home/ubuntu/tls.cert"
-LND_REST_MACAROON="/home/ubuntu/admin.macaroon"
+LND_REST_CERT="<USER_HOME>/tls.cert"
+LND_REST_MACAROON="<USER_HOME>/admin.macaroon"
 ~~~
 ทำการ build static file และเริ่มทดสอบ start 
 ~~~
@@ -200,8 +200,8 @@ sudo nano /etc/systemd/system/lnbits.service
 Description=LNbits
 
 [Service]
-WorkingDirectory=/home/ubuntu/lnbits-legend
-ExecStart=/home/ubuntu/lnbits-legend/venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
+WorkingDirectory=<USER_HOME>/lnbits-legend
+ExecStart=<USER_HOME>/lnbits-legend/venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
 User=ubuntu
 Restart=always
 TimeoutSec=120
