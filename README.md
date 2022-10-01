@@ -147,9 +147,10 @@ sudo systemctl restart lnd.service
 ขั้นตอนนี้เป็นส่วนของการติดตั้ง LNbits บน VPS เพื่อให้สามารถใช้งานได้จากภายนอกบ้าน (node เรารันในบ้าน) ทำให้สามารถใช้จ่าย bitcoin นอกสถานที่แต่ยังคงจ่ายผ่าน node ของเราเองที่รันอยู่ภายในบ้านได้
 
 ### Node: การคัดลอกสิทธิ์ LNbits เพื่อใช้เชื่อมต่อกับ LND
+คัดลอก tls.cert และ macaroon จาก LN Node ของเราไปเก็บไว้บน VPS ซึ่งจำเป็นต้องแก้ <USER> และ <PUBLIC_IP> ตามระบบที่เราใช้
 ~~~
-scp /data/lnd/tls.cert <VPS_USER>@<PUBLIC_IP>:~
-scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_IP>:~
+scp /data/lnd/tls.cert <USER>@<PUBLIC_IP>:~
+scp /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon <USER>@<PUBLIC_IP>:~
 ~~~
 
 ### VPS: ติดตั้ง LNbits บน VPS
@@ -171,7 +172,7 @@ mkdir ~/lnbits-legend/data
 cp .env.example .env
 sudo nano .env
 ~~~
-แก้ไขไฟล์ .env ดังนี้
+แก้ไขไฟล์ .env ดังนี้ (ต้องแก้ <USER_HOME> ตามที่ใช้)
 ~~~
 LNBITS_DATA_FOLDER="<USER_HOME>/lnbits-legend/data"
 LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
@@ -191,7 +192,7 @@ tmux new -s lnbits
 ~~~
 sudo nano /etc/systemd/system/lnbits.service
 ~~~
-ใส่รายละเอียดดังนี้
+ใส่รายละเอียดดังนี้ (จำเป็นต้องแก้ <USER> และ <USER_HOME> ให้ถูกต้อง ถ้าใช้ lunanode จะเป็น USER=ubuntu, USER_HOME=/home/ubuntu)
 ~~~
 # Systemd unit for lnbits
 # /etc/systemd/system/lnbits.service
@@ -202,7 +203,7 @@ Description=LNbits
 [Service]
 WorkingDirectory=<USER_HOME>/lnbits-legend
 ExecStart=<USER_HOME>/lnbits-legend/venv/bin/uvicorn lnbits.__main__:app --port 5000 --host 0.0.0.0
-User=ubuntu
+User=<USER>
 Restart=always
 TimeoutSec=120
 RestartSec=30
