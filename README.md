@@ -20,10 +20,13 @@
   - [VPS: ทำ Domain, Webserver และ SSL Certificate](#vps-ทำ-domain-webserver-และ-ssl-certificate)
 
 ## เตรียมความพร้อม
-ในขั้นตอนแรก เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Lunanode หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
+ในขั้นตอนแรก เราต้องเตรียมความพร้อมเครื่อง Nodebook/Desktop ให้พร้อม โดยจำเป็นต้อง Download putty,pscp และ puttygen จาก https://www.putty.org จากนั้นให้ generate key จาก puttygen และ generate key จากบน node ด้วยคำสั่ง ssh-keygen -t ed25519 
+
+หลังจากนั้น เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Lunanode หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
 
 ### VPS: ติดตั้ง VPS บน Cloud
 เมื่อสมัคร cloud เรียบร้อยให้ทำการสร้าง VPS ขึ้นมาใหม่ โดยเลือก OS เป็น Ubuntu และจำเป็นต้องใช้ Public IP ให้จด Public IP ที่ใช้บน VPS ไว้เพราะ IP นี้จำเป็นต้องสำหรับการเชื่อมต่อของ LND และ LNbits 
+สำหรับ VPS ที่สร้างใหม่ ควรใช้ authentication ด้วย SSH key ซึ่งเราได้ generate มาก่อนในขั้นตอนก่อนหน้าแล้ว
 
 ### VPS: hardening VPS ให้เหมาะสม
 ทำการอัพเกรด OS และ Config UFW
