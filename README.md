@@ -163,6 +163,7 @@ curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
 ~~~
 172.17.0.1    yoga500.local
 ~~~
+ถ้าตรวจสอบ cert ผ่านเรียบร้อย เราสามารถเริ่มติดตั้ง LNbits ได้ดังนี้
 
 ~~~
 sudo apt-get install git
