@@ -272,16 +272,11 @@ sudo systemctl start lnbits.service
 ~~~
 sudo apt update
 sudo apt install nginx certbot
-sudo certbot certonly --manual --preferred-challenges dns
+sudo systemctl stop nginx
+sudo certbot certonly --standalone --preferred-challenges http-01 -d <DOMAIN>.duckdns.org
+
 ~~~
-หลังจากนั้น certbot จะถามหา domain เราให้ใส่ domain ที่เราสร้างในขั้นตอนก่อนหน้า แล้วมันจะให้เราแสดงความเป็นเจ้าของด้วยการกำหนดค่า TXT Record ใน domain ของเรา ซึ่งทำได้ดังนี้
- - เปิด notepad ขึ้นมา และพิมพ์ค่า `https://www.duckdns.org/update?domains={YOURVALUE}&token={YOURVALUE}&txt={YOURVALUE}&verbose=true` โดยแทนที่ค่าต่าง ๆ ดังนี้
-     - `domains={YOURVALUE}` ใส่ค่า subdomain ไม่ต้องใส่ duckdns.org เช่น `domains=teemie`
-     - `token={YOURVALUE}` ใส่ค่า token ในหน้า duckdns.org 
-     - `txt={YOURVALUE}` ใส่ค่าที่ได้จาก cerbot
- - ตัวอย่าง `https://www.duckdns.org/update?domains=teemie&token=a123x4bc-e221-2352-wx15-57832e1h423g&txt=_acme-challenge.teemie.duckdns.org&verbose=true` ให้ copy URL ทั้งหมดไปใส่ใน Browser และผลที่ได้จะลงท้ายด้วย OK
- - เปิดหน้าจอ terminal อีกจอ ติดตั้ง dig `sudo apt-get install dnsutils` เพื่อใช้สำหรับตรวจสอบโดยใช้คำสั่ง `dig -t txt _acme-challenge.teemie.duckdns.org` เปรียบเทียบ TXT Record ที่ได้กับ certbot ถ้าทุกอย่างตรงกัน กลับไปที่หน้าจอ certbot กด enter
- - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `/etc/letsencrypt/live/teemie.duckdns.org/fullchain.pem` และ `/etc/letsencrypt/live/teemie.duckdns.org/privkey.pem`
+ - certbot จาก generate certificate สำหรับ domain ที่เราสร้างขึ้นอยู่ใน `/etc/letsencrypt/live/<DOMAIN>.duckdns.org/fullchain.pem` และ `/etc/letsencrypt/live/<DOMAIN>.duckdns.org/privkey.pem`
 
 #### Webserver NGINX
 สร้างไฟล์ config สำหรับ LNbits ใน nginx
@@ -320,7 +315,7 @@ ssl_certificate_key /etc/letsencrypt/live/<DOMAIN>.duckdns.org/privkey.pem; # Po
 ~~~
 sudo nginx -t
 sudo ln -s /etc/nginx/sites-available/lnbits.conf /etc/nginx/sites-enabled/
-sudo systemctl restart nginx
+sudo systemctl start nginx
 ~~~
 
 เสร็จสิ้นทุกขั้นตอน เราจะสามารถเข้าหน้าเว็บของ LNbits ด้วย `https://<DOMAIN>.duckdns.org` ซึ่งเชื่อมต่อกับ node ของเราผ่าน tunnel ที่เป็นส่วนตัวและปลอดภัย ได้จากภายนอกบ้าน ทุกที่ทั่วโลกครับ
