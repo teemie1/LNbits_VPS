@@ -24,7 +24,7 @@
 ## เตรียมความพร้อม
 ในขั้นตอนแรก เราต้องเตรียมความพร้อมเครื่อง Laptop/Desktop ให้พร้อม โดยจำเป็นต้องดาวน์โหลด putty, pscp และ puttygen ที่ https://www.putty.org จากนั้นให้สร้าง key จาก puttygen สำหรับ Laptop และสร้าง key สำหรับ node ด้วยคำสั่ง ssh-keygen -t ed25519 
 
-หลังจากนั้น เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Lunanode หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น ใครสนใจ Lunanode สามารถใช้ [referal link](https://www.lunanode.com/?r=21167) ของผมได้ครับ
+หลังจากนั้น เราจำเป็นต้องสมัคร VPS บน Cloud ซึ่งมีให้เลือกหลากหลายโดยที่ผมใช้คือ Digital Ocean หรือถ้าใครต้องการที่อื่นๆ ก็สามารถใช้ได้เช่น Digital Ocean, Amazon Web Server เป็นต้น
 
 ### VPS: ติดตั้ง VPS บน Cloud
 เมื่อสมัคร cloud เรียบร้อยให้ทำการสร้าง VPS ขึ้นมาใหม่ โดยเลือก OS เป็น Ubuntu และจำเป็นต้องใช้ Public IP ให้จด Public IP ที่ใช้บน VPS ไว้เพราะ IP นี้จำเป็นต้องสำหรับการเชื่อมต่อของ LND และ LNbits 
@@ -44,7 +44,7 @@ sudo ufw allow OpenSSH
 sudo ufw allow 80 comment 'Standard Webserver'
 sudo ufw allow 443 comment 'SSL Webserver'
 sudo ufw allow 9735 comment 'LND Main Node 1'
-sudo ufw allow 1194 comment 'OpenVPN'
+sudo ufw allow 41194/udp comment 'Wireguard'
 sudo ufw enable
 sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
@@ -54,68 +54,139 @@ sudo timedatectl set-timezone Asia/Bangkok
 ขั้นตอนนี้เป็นการสร้าง tunnel ระหว่าง VPS และ node ให้สามารถเชื่อมต่อกันได้แบบปลอดภัย
 
 ### VPS: ติดตั้ง Wireguard บน VPS พร้อม config & certificate
+ติดตั้ง Wireguard บน VPS ที่สร้างขึ้น
 ~~~
-export OVPN_DATA="ovpn-data"
-nano .bashrc
-# เพิ่มบันทัดล่างสุด export OVPN_DATA="ovpn-data"
-
-sudo docker volume create --name $OVPN_DATA
-sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://<PUBLIC IP>
-sudo docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki
-# Generate key for ca, use passphrase as usual
-
-sudo docker run -v $OVPN_DATA:/etc/openvpn --restart unless-stopped -d -p 1194:1194/udp -p 9735:9735 -p 8080:8080 --cap-add=NET_ADMIN kylemanna/openvpn
-sudo docker ps
-# จดหมายเลข CONTAINER ID
-
-sudo docker exec -it $(sudo docker ps -q) sh
-ifconfig
-# internal ip (docker): 172.17.0.2
-
-exit
-
-sudo docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full node1 nopass
-sudo docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient node1 > node1.ovpn
-##sudo docker update --restart unless-stopped $(sudo docker ps -q)
+sudo apt install wireguard
 ~~~
+เมื่อติดตั้ง Wireguwar เสร็จแล้ว ให้สร้าง Private Key & Public Key
+~~~
+sudo mkdir -m 0700 /etc/wireguard/
+cd /etc/wireguard/
+umask 077; wg genkey | tee privatekey | wg pubkey > publickey
+
+# แสดง private key และ public key
+ls -l privatekey publickey
+sudo cat privatekey
+# จด private key --> <SERVER_PRIVATE_KEY>
+sudo cat publickey
+# จด public key --> <SERVER_PUBLIC_KEY>
+~~~
+แก้ไขไฟล์ `/etc/wireguard/wg0.conf`
+~~~
+sudo nano /etc/wireguard/wg0.conf
+~~~
+เพิ่ม Private Key ไปที่ท้ายไฟล์ดังนี้
+~~~
+## Set Up WireGuard VPN on Ubuntu By Editing/Creating wg0.conf File ##
+[Interface]
+## My VPN server private IP address ##
+Address = 192.168.6.1/24
+ 
+## My VPN server port ##
+ListenPort = 41194
+ 
+## VPN server's private key i.e. /etc/wireguard/privatekey ##
+PrivateKey = <SERVER_PRIVATE_KEY>
+~~~
+Enable และ Start Wireguard
+~~~
+sudo systemctl enable wg-quick@wg0
+sudo systemctl start wg-quick@wg0
+sudo systemctl status wg-quick@wg0
+~~~
+เช็ค interface wg0
+~~~
+sudo wg
+sudo ip a show wg0
+~~~
+
 
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
-คัดลอกไฟล์ node1.ovpn ซึ่งเป็น client openvpn config ใช้สำหรับการเชื่อมต่อระหว่าง VPN Client และ VPN Server เพื่อสร้าง tunnel เชื่อมต่อถึงกัน
+ติดตั้ง Wireguard และสร้างไฟล์ config บน node
 ~~~
-cd ~
-mkdir VPNcert
-scp <VPS_User>@<PUBLIC_IP>:node1.ovpn ~/VPNcert
-chmod 600 ~/VPNcert/node1.ovpn
-sudo apt-get install openvpn
-sudo cp -p ~/VPNcert/node1.ovpn /etc/openvpn/CERT.conf
-sudo systemctl enable openvpn@CERT
-sudo systemctl start openvpn@CERT
+sudo apt install wireguard
+sudo sh -c 'umask 077; touch /etc/wireguard/wg0.conf'
+cd /etc/wireguard/
+sudo umask 077; wg genkey | tee privatekey | wg pubkey > publickey
+ls -l publickey privatekey
+## Note down the privatekey ##
+sudo cat privatekey
+# จด private key --> <CLIENT_PRIVATE_KEY>
+sudo cat publickey
+# จด public key --> <CLIENT_PUBLIC_KEY>
+~~~
+แก้ไขไฟล์ `/etc/wireguard/wg0.conf` บน node
+~~~
+sudo nano /etc/wireguard/wg0.conf
+~~~
+เพิ่มดังนี้
+~~~
+[Interface]
+## This Desktop/client's private key ##
+PrivateKey = <CLIENT_PRIVATE_KEY>
+ 
+## Client ip address ##
+Address = 192.168.6.2/24
+ 
+[Peer]
+## Ubuntu 20.04 server public key ##
+PublicKey = <SERVER_PUBLIC_KEY>
+ 
+## set ACL ##
+AllowedIPs = 192.168.6.0/24
+ 
+## Your VPS server's public IPv4/IPv6 address and port ##
+Endpoint = <PUBLIC_IP>:41194
+ 
+##  Key connection alive ##
+PersistentKeepalive = 15
+~~~
+Enable และ Start Wireguard บน node
+~~~
+sudo systemctl enable wg-quick@wg0
+sudo systemctl start wg-quick@wg0
+sudo systemctl status wg-quick@wg0
+~~~
+
+### VPS: เพิ่ม client และทำ port forward บน VPS
+หยุดการทำงาน Wireguard และแก้ไขไฟล์ config
+~~~
+sudo systemctl stop wg-quick@wg0
+sudo vi /etc/wireguard/wg0.conf
+~~~
+เพิ่มดังนี้
+~~~
+[Peer]
+## Desktop/client VPN public key ##
+PublicKey = <CLIENT_PUBLIC_KEY>
+ 
+## client VPN IP address (note  the /32 subnet) ##
+AllowedIPs = 192.168.6.2/32
+~~~
+แก้ไขไฟล์แล้วสั่ง Start Wireguard
+~~~
+sudo systemctl start wg-quick@wg0
+~~~
+หลังจาก VPS และ node ของเรา connect ผ่าน Wireguard สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
+~~~
+VPS IP  : 192.168.6.1
+Node IP : 192.168.6.2
+~~~
 
 ~~~
-* <VPS_User> สำหรับ Lunanode คือ ubuntu ส่วน Digital Ocean คือ root
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.6.2:8080
+iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
 
-หลังจาก node ของเรา connect ไปที่ VPS ด้วย OpenVPN สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
-~~~
-VPS IP  : 192.168.255.1
-Node IP : 192.168.255.6
-~~~
-
-
-### VPS: ทำ port forward บน VPS
-~~~
-sudo docker exec -it $(sudo docker ps -q) sh
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
-iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
-
-cd /etc/openvpn
-nano ovpn_env.sh
+nano /etc/wireguard/helper/add-nat-routing.sh
 # Add the following line to the file
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.255.6:8080
-iptables -t nat -A POSTROUTING -d 192.168.255.0/24 -o tun0 -j MASQUERADE
-
-exit
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to 192.168.6.2:8080
+iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
+~~~
+แก้ไขไฟล์ `/etc/wireguard/wg0.conf` โดนเพิ่มดังนี้
+~~~
+PostUp = /etc/wireguard/helper/add-nat-routing.sh
 ~~~
 
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
@@ -145,7 +216,7 @@ allow-circular-route=1
 externalip=<PUBLIC_IP>:9735
 listen=0.0.0.0:9735
 restlisten=0.0.0.0:8080
-tlsextraip=172.17.0.1
+tlsextraip=192.168.6.2
 nat=false
 
 [tor]
