@@ -262,12 +262,12 @@ scp ~/citadel/lnd/data/chain/bitcoin/mainnet/admin.macaroon <VPS_USER>@<PUBLIC_I
 ### VPS: ติดตั้ง LNbits บน VPS
 ก่อนเริ่มติดตั้ง เราสามารถเช็ค cert ที่คัดลอกมาจาก node โดยใชคำสั่ง ซึ่งถ้าไม่ถูกต้องอาจลองตรวจสอบไฟล์ที่คัดลอกมาอีกครั้ง
 ~~~
-curl https://172.17.0.1:8080 -v --cacert ~/tls.cert
+curl https://192.168.6.2:8080 -v --cacert ~/tls.cert
 ~~~
 ถ้า cert ที่คัดลอกมาจาก node ไม่สามารถใช้ได้ อาจจะต้องใส่ชื่อใน /etc/hosts ให้ตรงกับ url ของ cert จึงจะใช้ได้ เช่น node ของเราชื่อ <NODE_HOSTNAME> เราจำเป็นต้องเพิ่มในไฟล์ /etc/hosts ดังนี้
   
 ~~~
-172.17.0.1    <NODE_HOSTNAME>
+192.168.6.2    <NODE_HOSTNAME>
 ~~~
 ถ้าตรวจสอบ cert ผ่านเรียบร้อย เราสามารถเริ่มติดตั้ง LNbits ได้ดังนี้
 
@@ -287,7 +287,7 @@ sudo nano .env
 ~~~
 LNBITS_DATA_FOLDER="<USER_HOME>/lnbits-legend/data"
 LNBITS_BACKEND_WALLET_CLASS=LndRestWallet
-LND_REST_ENDPOINT="https://172.17.0.1:8080"
+LND_REST_ENDPOINT="https://192.168.6.2:8080"
 LND_REST_CERT="<USER_HOME>/tls.cert"
 LND_REST_MACAROON="<USER_HOME>/admin.macaroon"
 ~~~
