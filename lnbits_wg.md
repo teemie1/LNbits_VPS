@@ -89,6 +89,29 @@ ListenPort = 41194
 ## VPN server's private key i.e. /etc/wireguard/privatekey ##
 PrivateKey = <SERVER_PRIVATE_KEY>
 
+PostUp = /etc/wireguard/helper/add-nat-routing.sh
+~~~
+ทำ forward port ด้วยการเขียน script
+~~~
+mkdir /etc/wireguard/helper
+nano /etc/wireguard/helper/add-nat-routing.sh
+# Add the following line to the file
+sudo iptables -P FORWARD DROP
+sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
+sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
+~~~
+แก้ไขไฟล์ config ดังนี้
+~~~
+sudo vi /etc/sysctl.d/10-wireguard.conf
+# Add following line
+net.ipv4.ip_forward=1
+net.ipv6.conf.all.forwarding=1
+
+sudo sysctl -p /etc/sysctl.d/10-wireguard.conf
+sudo chmod -v +x /etc/wireguard/helper/*.sh
 ~~~
 Enable และ Start Wireguard
 ~~~
@@ -101,8 +124,6 @@ sudo systemctl status wg-quick@wg0
 sudo wg
 sudo ip a show wg0
 ~~~
-
-
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
 ติดตั้ง Wireguard และสร้างไฟล์ config บน node
 ~~~
@@ -192,40 +213,7 @@ VPS IP  : 192.168.6.1
 Node IP : 192.168.6.2
 ~~~
 
-~~~
-sudo iptables -P FORWARD DROP
-sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
-sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
-sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
 
-mkdir /etc/wireguard/helper
-nano /etc/wireguard/helper/add-nat-routing.sh
-# Add the following line to the file
-sudo iptables -P FORWARD DROP
-sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
-sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
-sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
-~~~
-แก้ไขไฟล์ `/etc/wireguard/wg0.conf` โดนเพิ่มดังนี้
-~~~
-chmod u+x /etc/wireguard/helper/*.sh
-nano /etc/wireguard/wg0.conf
-# Add following line before [Peer]
-PostUp = /etc/wireguard/helper/add-nat-routing.sh
-
-sudo vi /etc/sysctl.d/10-wireguard.conf
-# Add following line
-net.ipv4.ip_forward=1
-net.ipv6.conf.all.forwarding=1
-
-sudo sysctl -p /etc/sysctl.d/10-wireguard.conf
-sudo chmod -v +x /etc/wireguard/helper/*.sh
-sudo systemctl restart wg-quick@wg0.service
-~~~
 
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
 เพื่อให้ LND เราสามารถใช้ Hybrid Mode และ LNbits จำเป็นต้องแก้ไขไฟล์ lnd.conf และ restart lnd
