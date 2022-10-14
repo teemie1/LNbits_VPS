@@ -191,6 +191,13 @@ chmod u+x /etc/wireguard/helper/*.sh
 nano /etc/wireguard/wg0.conf
 # Add following line
 PostUp = /etc/wireguard/helper/add-nat-routing.sh
+
+sudo vi /etc/sysctl.d/10-wireguard.conf
+# Add following line
+net.ipv4.ip_forward=1
+net.ipv6.conf.all.forwarding=1
+
+sysctl -p /etc/sysctl.d/10-wireguard.conf
 ~~~
 
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
