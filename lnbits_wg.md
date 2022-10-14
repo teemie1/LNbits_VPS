@@ -35,7 +35,6 @@
 ~~~
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install docker.io tmux
 sudo systemctl start docker.service
 sudo apt install ufw
 sudo ufw default deny incoming
