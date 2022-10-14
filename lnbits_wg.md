@@ -1,5 +1,5 @@
 
-# ติดตั้ง LNbits และทำ Clearnet บน VPS (LN Node Workshop)
+# ติดตั้ง LNbits และทำ Clearnet บน VPS (ด้วย Wireguard)
 <img src="tunnels-shanghai.jpg" />
 
 ขั้นตอนต่างๆ ในการติดตั้งอ้างอิงจาก [TrezorHannes/vps-lnbits](https://github.com/TrezorHannes/vps-lnbits) แต่มีการปรับค่าพารามิเตอร์บางอย่างให้ถูกต้องและเหมาะสมกับการใช้งาน node ของเรา ผมจะขอจัดกลุ่มขั้นตอนการติดตั้งใหม่ดังนี้
