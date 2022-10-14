@@ -179,6 +179,7 @@ Node IP : 192.168.6.2
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
 iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
 
+mkdir /etc/wireguard/helper
 nano /etc/wireguard/helper/add-nat-routing.sh
 # Add the following line to the file
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
