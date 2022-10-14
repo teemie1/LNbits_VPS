@@ -208,6 +208,8 @@ sudo nano lnd.conf
 ~~~
 cd ~/citadel/lnd
 sudo nano lnd.conf
+# and
+sudo nano ~/citadel/templates/lnd-sample.conf
 ~~~
 แก้ไขพารามิเตอร์ใน lnd.conf (ให้เพิ่ม tlsextraip เข้าไปใน lnd.conf ไม่ลบของเดิมที่มีอยู่)
 ~~~
