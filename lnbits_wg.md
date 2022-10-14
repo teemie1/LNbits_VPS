@@ -58,9 +58,10 @@ sudo timedatectl set-timezone Asia/Bangkok
 ~~~
 sudo apt install wireguard
 ~~~
-เมื่อติดตั้ง Wireguwar เสร็จแล้ว ให้สร้าง Private Key & Public Key
+เมื่อติดตั้ง Wireguard เสร็จแล้ว ให้สร้าง Private Key & Public Key
 ~~~
-sudo mkdir -m 0700 /etc/wireguard/
+sudo -i
+mkdir -m 0700 /etc/wireguard/
 cd /etc/wireguard/
 umask 077; wg genkey | tee privatekey | wg pubkey > publickey
 
@@ -106,6 +107,7 @@ sudo ip a show wg0
 ~~~
 sudo apt install wireguard
 sudo sh -c 'umask 077; touch /etc/wireguard/wg0.conf'
+sudo -i
 cd /etc/wireguard/
 sudo umask 077; wg genkey | tee privatekey | wg pubkey > publickey
 ls -l publickey privatekey
