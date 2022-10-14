@@ -1,16 +1,18 @@
 
 # ติดตั้ง LNbits และทำ Clearnet บน VPS (ด้วย Wireguard)
-<img src="tunnels-shanghai.jpg" />
+<img src="wireguard_8070_8878.png" />
 
-ขั้นตอนต่างๆ ในการติดตั้งอ้างอิงจาก [TrezorHannes/vps-lnbits](https://github.com/TrezorHannes/vps-lnbits) แต่มีการปรับค่าพารามิเตอร์บางอย่างให้ถูกต้องและเหมาะสมกับการใช้งาน node ของเรา ผมจะขอจัดกลุ่มขั้นตอนการติดตั้งใหม่ดังนี้
+สืบเนื่องจากผมจำเป็นต้องย้าย VPS จาก lunanode ไปที่ Digital Ocean เพื่อให้ connectivity และ ping time ดีขึ้น อีกทั้งผมมีเหตุจำเป็นต้องเปลี่ยน VPN Software จาก OpenVPN ไปเป็น Wireguard เพราะมีอุปกรณ์อื่น ๆ ที่จะใช้งานร่วมด้วย (มันรองรับเฉพาะ Wireguard) นั้นจึงเป็นเหตุให้ต้องทำ VPS ใหม่ทั้งหมด จึงถือเป็นโอกาสอันดีที่จะเปลี่ยนไปใช้ Wireguard
+
+ขั้นตอนต่างๆ ในการติดตั้งยังคงอ้างอิงจาก [TrezorHannes/vps-lnbits](https://github.com/TrezorHannes/vps-lnbits) แต่มีการปรับค่าพารามิเตอร์อีกทั้งเปลี่ยนจาก OpenVPN ไปเป็น Wireguard ผมจะขอจัดกลุ่มขั้นตอนการติดตั้งใหม่ดังนี้
 
 - [เตรียมความพร้อม](#เตรียมความพร้อม)
   - [VPS: ติดตั้ง VPS บน Cloud](#vps-ติดตั้ง-vps-บน-cloud)
   - [VPS: hardening VPS ให้เหมาะสม](#vps-hardening-vps-ให้เหมาะสม)
-- [ติดตั้งและ config OpenVPN บน VPS และ node](#ติดตั้งและ-config-openvpn-บน-vps-และ-node)
-  - [VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate](#vps-ติดตั้ง-openvpn-server-บน-vps-พร้อม-config--certificate)
+- [ติดตั้งและ config Wireguard บน VPS และ node](#ติดตั้งและ-config-wireguard-บน-vps-และ-node)
+  - [VPS: ติดตั้ง Wireguard บน VPS พร้อม config & certificate](#vps-ติดตั้ง-wireguard-บน-vps-พร้อม-config--certificate)
   - [Node: ติดตั้งและทดสอบ VPN Tunnel บน node](#node-ติดตั้งและทดสอบ-vpn-tunnel-บน-node)
-  - [VPS: ทำ port forward ใน docker ของ OpenVPN](#vps-ทำ-port-forward-ใน-docker-ของ-openvpn)
+  - [VPS: ทำ port forward บน VPS](#vps-ทำ-port-forward-บน-vps)
 - [แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits](#แก้ไขพารามิเตอร์บน-lnd-สำหรับรองรับ-hybrid-mode-และ-lnbits)
   - [Node: แก้ไขพารามิเตอร์บน LND](#node-แก้ไขพารามิเตอร์บน-lnd)
   - [Node: Restart LND](#node-restart-lnd)
@@ -48,10 +50,10 @@ sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
 ~~~
 
-## ติดตั้งและ config OpenVPN บน VPS และ node
+## ติดตั้งและ config Wireguard บน VPS และ node
 ขั้นตอนนี้เป็นการสร้าง tunnel ระหว่าง VPS และ node ให้สามารถเชื่อมต่อกันได้แบบปลอดภัย
 
-### VPS: ติดตั้ง OpenVPN Server บน VPS พร้อม config & certificate
+### VPS: ติดตั้ง Wireguard บน VPS พร้อม config & certificate
 ~~~
 export OVPN_DATA="ovpn-data"
 nano .bashrc
@@ -99,7 +101,7 @@ Node IP : 192.168.255.6
 ~~~
 
 
-### VPS: ทำ port forward ใน docker ของ OpenVPN
+### VPS: ทำ port forward บน VPS
 ~~~
 sudo docker exec -it $(sudo docker ps -q) sh
 iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.255.6:9735
