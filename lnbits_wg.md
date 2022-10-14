@@ -67,9 +67,9 @@ umask 077; wg genkey | tee privatekey | wg pubkey > publickey
 
 # แสดง private key และ public key
 ls -l privatekey publickey
-sudo cat privatekey
+cat privatekey
 # จด private key --> <SERVER_PRIVATE_KEY>
-sudo cat publickey
+cat publickey
 # จด public key --> <SERVER_PUBLIC_KEY>
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf`
@@ -112,14 +112,14 @@ cd /etc/wireguard/
 sudo umask 077; wg genkey | tee privatekey | wg pubkey > publickey
 ls -l publickey privatekey
 ## Note down the privatekey ##
-sudo cat privatekey
+cat privatekey
 # จด private key --> <CLIENT_PRIVATE_KEY>
-sudo cat publickey
+cat publickey
 # จด public key --> <CLIENT_PUBLIC_KEY>
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` บน node
 ~~~
-sudo nano /etc/wireguard/wg0.conf
+nano /etc/wireguard/wg0.conf
 ~~~
 เพิ่มดังนี้
 ~~~
