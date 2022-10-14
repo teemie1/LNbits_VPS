@@ -116,6 +116,13 @@ cat privatekey
 # จด private key --> <CLIENT_PRIVATE_KEY>
 cat publickey
 # จด public key --> <CLIENT_PUBLIC_KEY>
+
+ip route list table main default
+# จด Gateway IP --> <GATEWAY_IP>
+ip -brief address show eth0
+# จด VPS Local IP --> <VPS_LOCAL_IP>
+resolvectl dns eth0
+# จด DNS Server 1 & 2 --> <DNS_IP_1> <DNS_IP_1>
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` บน node
 ~~~
@@ -129,7 +136,13 @@ PrivateKey = <CLIENT_PRIVATE_KEY>
  
 ## Client ip address ##
 Address = 192.168.6.2/24
- 
+
+PostUp = ip rule add table 200 from <VPS_LOCAL_IP>
+PostUp = ip route add table 200 default via <GATEWAY_IP>
+PreDown = ip rule delete table 200 from <VPS_LOCAL_IP>
+PreDown = ip route delete table 200 default via <GATEWAY_IP>
+
+DNS = <DNS_IP_1> <DNS_IP_1>
 [Peer]
 ## Ubuntu 20.04 server public key ##
 PublicKey = <SERVER_PUBLIC_KEY>
@@ -197,7 +210,9 @@ sudo vi /etc/sysctl.d/10-wireguard.conf
 net.ipv4.ip_forward=1
 net.ipv6.conf.all.forwarding=1
 
-sysctl -p /etc/sysctl.d/10-wireguard.conf
+sudo sysctl -p /etc/sysctl.d/10-wireguard.conf
+sudo chmod -v +x /etc/wireguard/helper/*.sh
+sudo systemctl restart wg-quick@wg0.service
 ~~~
 
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
