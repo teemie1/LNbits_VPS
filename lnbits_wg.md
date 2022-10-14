@@ -187,6 +187,9 @@ iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` โดนเพิ่มดังนี้
 ~~~
+chmod u+x /etc/wireguard/helper/*.sh
+nano /etc/wireguard/wg0.conf
+# Add following line
 PostUp = /etc/wireguard/helper/add-nat-routing.sh
 ~~~
 
