@@ -121,9 +121,8 @@ cat publickey
 ip route list table main default
 # จด Gateway IP --> <GATEWAY_IP>
 ip -brief address show eth0
-# จด VPS Local IP --> <VPS_LOCAL_IP>
-resolvectl dns eth0
-# จด DNS Server 1 & 2 --> <DNS_IP_1> <DNS_IP_1>
+# จด Node Local IP --> <NODE_LOCAL_IP>
+
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` บน node
 ~~~
@@ -143,12 +142,10 @@ PostUp = iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
 PreDown = ufw route delete allow in on wg0 out on eth0
 PreDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
-PostUp = ip rule add table 200 from <VPS_LOCAL_IP>
+PostUp = ip rule add table 200 from <NODE_LOCAL_IP>
 PostUp = ip route add table 200 default via <GATEWAY_IP>
-PreDown = ip rule delete table 200 from <VPS_LOCAL_IP>
+PreDown = ip rule delete table 200 from <NODE_LOCAL_IP>
 PreDown = ip route delete table 200 default via <GATEWAY_IP>
-
-DNS = <DNS_IP_1> <DNS_IP_1>
 
 [Peer]
 ## Ubuntu 20.04 server public key ##
@@ -196,20 +193,28 @@ Node IP : 192.168.6.2
 ~~~
 
 ~~~
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
-iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
+sudo iptables -P FORWARD DROP
+sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
+sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
 
 mkdir /etc/wireguard/helper
 nano /etc/wireguard/helper/add-nat-routing.sh
 # Add the following line to the file
-iptables -A PREROUTING -t nat -i eth0 -p tcp -m tcp --dport 9735 -j DNAT --to 192.168.6.2:9735
-iptables -t nat -A POSTROUTING -d 192.168.6.0/24 -o wg0 -j MASQUERADE
+sudo iptables -P FORWARD DROP
+sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
+sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` โดนเพิ่มดังนี้
 ~~~
 chmod u+x /etc/wireguard/helper/*.sh
 nano /etc/wireguard/wg0.conf
-# Add following line
+# Add following line before [Peer]
 PostUp = /etc/wireguard/helper/add-nat-routing.sh
 
 sudo vi /etc/sysctl.d/10-wireguard.conf
