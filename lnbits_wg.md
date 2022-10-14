@@ -10,7 +10,7 @@
   - [VPS: ติดตั้ง VPS บน Cloud](#vps-ติดตั้ง-vps-บน-cloud)
   - [VPS: hardening VPS ให้เหมาะสม](#vps-hardening-vps-ให้เหมาะสม)
 - [ติดตั้งและ config Wireguard บน VPS และ node](#ติดตั้งและ-config-wireguard-บน-vps-และ-node)
-  - [VPS: ติดตั้ง Wireguard บน VPS พร้อม config & certificate](#vps-ติดตั้ง-wireguard-บน-vps-พร้อม-config--certificate)
+  - [VPS: ติดตั้ง Wireguard บน VPS พร้อม config key](#vps-ติดตั้ง-wireguard-บน-vps-พร้อม-config-key)
   - [Node: ติดตั้งและทดสอบ VPN Tunnel บน node](#node-ติดตั้งและทดสอบ-vpn-tunnel-บน-node)
   - [VPS: ทำ port forward บน VPS](#vps-ทำ-port-forward-บน-vps)
 - [แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits](#แก้ไขพารามิเตอร์บน-lnd-สำหรับรองรับ-hybrid-mode-และ-lnbits)
@@ -53,7 +53,7 @@ sudo timedatectl set-timezone Asia/Bangkok
 ## ติดตั้งและ config Wireguard บน VPS และ node
 ขั้นตอนนี้เป็นการสร้าง tunnel ระหว่าง VPS และ node ให้สามารถเชื่อมต่อกันได้แบบปลอดภัย
 
-### VPS: ติดตั้ง Wireguard บน VPS พร้อม config & certificate
+### VPS: ติดตั้ง Wireguard บน VPS พร้อม config key
 ติดตั้ง Wireguard บน VPS ที่สร้างขึ้น
 ~~~
 sudo apt install wireguard
