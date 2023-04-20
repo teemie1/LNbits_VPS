@@ -216,37 +216,36 @@ sudo nano config
 
 แก้ไขพารามิเตอร์ใน lnd.conf (ให้เพิ่ม tlsextraip เข้าไปใน lnd.conf ไม่ลบของเดิมที่มีอยู่)
 ~~~
-[Application Options]
-allow-circular-route=1
-externalip=<PUBLIC_IP>:9735
-listen=0.0.0.0:9735
-restlisten=0.0.0.0:8080
-tlsextraip=192.168.6.2
-nat=false
+# TOR
+addr=statictor:127.0.0.1:9051/torport=9736
+proxy=127.0.0.1:9050
+always-use-proxy=false
 
-[tor]
-tor.active=true
-tor.v3=true
-tor.streamisolation=false
-tor.skip-proxy-for-clearnet-targets=true
-~~~
-การเพิ่ม tlsextraip ใน lnd.conf เพื่อเพิ่ม IP เข้าใน cert file เราจึงจำเป็นต้องลบ cert และ key เดิมเสียก่อน แล้วไฟล์ทั้งสองจะถูกสร้างใหม่หลังจาก restart lnd
-~~~
-mv tls.cert tls.cert.old
-mv tls.key tls.key.old
+# CLEARNET
+bind-addr=0.0.0.0:9736
+announce-addr=<Public Ip>:9736
 ~~~
 
-### Node: Restart LND
-ทำการ restart lnd ด้วยคำสั่งดังนี้
+
+### Node: Restart CLN
+ทำการ restart cln ด้วยคำสั่งดังนี้
 * Raspibolt
 ~~~
-sudo systemctl restart lnd.service
+sudo systemctl restart lightningd
 ~~~
-* Citadel
+หลังจาก restart cln เรียบร้อยแล้ว URI จะปรากฎ 2 ค่า (หนึ่งในนั้นเป็น IP Address) 
+
+
+* Steps to restart Wireguard
 ~~~
-sudo docker restart lightning
+ sudo wg-quick down wg0
+ sudo systemctl stop wg-quick@wg0
+ sudo systemctl start wg-quick@wg0
+ sudo systemctl status wg-quick@wg0
 ~~~
-หลังจาก restart lnd เรียบร้อยแล้ว URI จะปรากฎ 2 ค่า (หนึ่งในนั้นเป็น IP Address) และ cert file (tls.cert & tls.key) จะถูกสร้างขึ้นใหม่เพื่อรองรับการเชื่อมต่อจาก VPS
+
+
+
 
 ## ติดตั้ง LNbits บน VPS
 ขั้นตอนนี้เป็นส่วนของการติดตั้ง LNbits บน VPS เพื่อให้สามารถใช้งานได้จากภายนอกบ้าน (node เรารันในบ้าน) ทำให้สามารถใช้จ่าย bitcoin นอกสถานที่แต่ยังคงจ่ายผ่าน node ของเราเองที่รันอยู่ภายในบ้านได้
