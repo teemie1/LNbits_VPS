@@ -33,15 +33,13 @@
 ~~~
 sudo apt-get update
 sudo apt-get upgrade
-sudo systemctl start docker.service
+//sudo systemctl start docker.service
 sudo apt install ufw
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow OpenSSH
-sudo ufw allow 80 comment 'Standard Webserver'
-sudo ufw allow 443 comment 'SSL Webserver'
-sudo ufw allow 9735 comment 'LND Main Node 1'
-sudo ufw allow 41194/udp comment 'Wireguard'
+sudo ufw allow 9736 comment 'CLN Node 1'
+sudo ufw allow 51820/udp
 sudo ufw enable
 sudo apt install fail2ban
 sudo timedatectl set-timezone Asia/Bangkok
@@ -77,47 +75,40 @@ sudo nano /etc/wireguard/wg0.conf
 ~~~
 ## Set Up WireGuard VPN on Ubuntu By Editing/Creating wg0.conf File ##
 [Interface]
-## My VPN server private IP address ##
-Address = 192.168.6.1/24
- 
-## My VPN server port ##
-ListenPort = 41194
- 
-## VPN server's private key i.e. /etc/wireguard/privatekey ##
-PrivateKey = <SERVER_PRIVATE_KEY>
+PrivateKey = 
+Address = 10.8.0.1/24
+ListenPort = 51820
+SaveConfig = true
 
-PostUp = /etc/wireguard/helper/add-nat-routing.sh
-PostDown = /etc/wireguard/helper/remove-nat-routing.sh
+PostUp = ufw route allow in on wg0 out on eth0
+PostUp = iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
+PreDown = ufw route delete allow in on wg0 out on eth0
+PreDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 ~~~
-ทำ forward port ด้วยการเขียน script
-~~~
-mkdir /etc/wireguard/helper
-nano /etc/wireguard/helper/add-nat-routing.sh
-# Add the following line to the file
-sudo iptables -P FORWARD DROP
-sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
-sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
-sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
 
-nano /etc/wireguard/helper/remove-nat-routing.sh
-sudo iptables -P FORWARD DROP
-sudo iptables -D FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9735 -m conntrack --ctstate NEW -j ACCEPT
-sudo iptables -D FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -D FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -D PREROUTING -i eth0 -p tcp --dport 9735 -j DNAT --to-destination 192.168.6.2
-sudo iptables -t nat -D POSTROUTING -o wg0 -p tcp --dport 9735 -d 192.168.6.2 -j SNAT --to-source 192.168.6.1
-~~~
 แก้ไขไฟล์ config ดังนี้
 ~~~
-sudo vi /etc/sysctl.d/10-wireguard.conf
+sudo nano /etc/sysctl.conf
 # Add following line
 net.ipv4.ip_forward=1
-net.ipv6.conf.all.forwarding=1
 
-sudo sysctl -p /etc/sysctl.d/10-wireguard.conf
-sudo chmod -v +x /etc/wireguard/helper/*.sh
+sudo sysctl -p
+~~~
+ทำ Port Forwarding
+~~~
+sudo iptables -P FORWARD DROP
+sudo iptables -A FORWARD -i eth0 -o wg0 -p tcp --syn --dport 9736 -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o wg0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i wg0 -o eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9736 -j DNAT --to-destination 10.8.0.2
+sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9736 -d 10.8.0.2 -j SNAT --to-source 10.8.0.1
+~~~
+ทำให้ persistent หลัง reboot
+~~~
+sudo apt install netfilter-persistent
+sudo apt install iptables-persistent
+sudo netfilter-persistent save
+sudo systemctl enable netfilter-persistent
 ~~~
 Enable และ Start Wireguard
 ~~~
@@ -133,11 +124,13 @@ sudo ip a show wg0
 ### Node: ติดตั้งและทดสอบ VPN Tunnel บน node
 ติดตั้ง Wireguard และสร้างไฟล์ config บน node
 ~~~
-sudo apt install wireguard
+sudo apt install wireguard -y
+sudo apt install resolvconf -y
 sudo sh -c 'umask 077; touch /etc/wireguard/wg0.conf'
 sudo -i
 cd /etc/wireguard/
-sudo umask 077; wg genkey | tee privatekey | wg pubkey > publickey
+wg genkey | tee privatekey | wg pubkey > publickey
+chmod 600 /etc/wireguard/*
 ls -l publickey privatekey
 ## Note down the privatekey ##
 cat privatekey
@@ -147,9 +140,9 @@ cat publickey
 
 ip route list table main default
 # จด Gateway IP --> <GATEWAY_IP>
-ip -brief address show eth0
+ip -brief address show eno1
 # จด Node Local IP --> <NODE_LOCAL_IP>
-
+resolvectl dns eno1 --> <DNS IP>
 ~~~
 แก้ไขไฟล์ `/etc/wireguard/wg0.conf` บน node
 ~~~
@@ -158,35 +151,23 @@ nano /etc/wireguard/wg0.conf
 เพิ่มดังนี้
 ~~~
 [Interface]
-## This Desktop/client's private key ##
 PrivateKey = <CLIENT_PRIVATE_KEY>
- 
-## Client ip address ##
-Address = 192.168.6.2/24
-
-PostUp = ufw route allow in on wg0 out on eth0
-PostUp = iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
-PreDown = ufw route delete allow in on wg0 out on eth0
-PreDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+Address = 10.8.0.2/24
 
 PostUp = ip rule add table 200 from <NODE_LOCAL_IP>
 PostUp = ip route add table 200 default via <GATEWAY_IP>
 PreDown = ip rule delete table 200 from <NODE_LOCAL_IP>
 PreDown = ip route delete table 200 default via <GATEWAY_IP>
 
+DNS = <DNS IP>
+
 [Peer]
-## Ubuntu 20.04 server public key ##
 PublicKey = <SERVER_PUBLIC_KEY>
- 
-## set ACL ##
-AllowedIPs = 192.168.6.0/24
- 
-## Your VPS server's public IPv4/IPv6 address and port ##
-Endpoint = <PUBLIC_IP>:41194
- 
-##  Key connection alive ##
-PersistentKeepalive = 15
+AllowedIPs = 0.0.0.0/0
+Endpoint = <PUBLIC_IP>:51820
+PersistentKeepalive = 25
 ~~~
+
 Enable และ Start Wireguard บน node
 ~~~
 sudo systemctl enable wg-quick@wg0
@@ -203,11 +184,8 @@ sudo vi /etc/wireguard/wg0.conf
 เพิ่มดังนี้
 ~~~
 [Peer]
-## Desktop/client VPN public key ##
 PublicKey = <CLIENT_PUBLIC_KEY>
- 
-## client VPN IP address (note  the /32 subnet) ##
-AllowedIPs = 192.168.6.2/32
+AllowedIPs = 10.8.0.2/32
 ~~~
 แก้ไขไฟล์แล้วสั่ง Start Wireguard
 ~~~
@@ -215,8 +193,8 @@ sudo systemctl start wg-quick@wg0
 ~~~
 หลังจาก VPS และ node ของเรา connect ผ่าน Wireguard สำเร็จ node และ VPS จะคุยกันได้ภายใน tunnel และจะมี Private IP ภายใน tunnel ดังนี้
 ~~~
-VPS IP  : 192.168.6.1
-Node IP : 192.168.6.2
+VPS IP  : 10.8.0.1
+Node IP : 10.8.0.2
 ~~~
 
 
@@ -224,25 +202,18 @@ Node IP : 192.168.6.2
 ## แก้ไขพารามิเตอร์บน LND สำหรับรองรับ hybrid mode และ LNbits
 เพื่อให้ LND เราสามารถใช้ Hybrid Mode และ LNbits จำเป็นต้องแก้ไขไฟล์ lnd.conf และ restart lnd
 
-### Node: แก้ไขพารามิเตอร์บน LND
+### Node: แก้ไขพารามิเตอร์บน CLN
 เปิดพอร์ตบน firewall
 ~~~
-sudo ufw allow 9735 comment 'allow LND from outside'
-sudo ufw allow 8080 comment 'allow RestLNDWallet from outside'
+sudo ufw allow 9736 comment 'allow CLN from outside'
 ~~~
-เปิดไฟล์ lnd.con เพื่อแก้ไข
+เปิดไฟล์ config เพื่อแก้ไข
 * Raspibolt
 ~~~
-cd /data/lnd
-sudo nano lnd.conf
+cd /data/lightningd
+sudo nano config
 ~~~
-* Citadel
-~~~
-cd ~/citadel/lnd
-sudo nano lnd.conf
-# and
-sudo nano ~/citadel/templates/lnd-sample.conf
-~~~
+
 แก้ไขพารามิเตอร์ใน lnd.conf (ให้เพิ่ม tlsextraip เข้าไปใน lnd.conf ไม่ลบของเดิมที่มีอยู่)
 ~~~
 [Application Options]
